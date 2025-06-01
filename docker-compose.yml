@@ -14,27 +14,38 @@ services:
   user-service:
     build: ./services/user-service
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/ecommerce
+      DATABASE_URL: postgres://postgres:password@postgres:5432/ecommerce_user
       JWT_SECRET: supersecretkey
     ports:
-      - "3001:3001" # Expose user‐service at 3001 for local testing
+      - "3001:3001"
     networks:
       - ecommerce-net
     restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
+
+  # product-catalog-service:
+  #   build: ./services/product-catalog-service
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:password@postgres:5432/ecommerce_product
+  #   ports:
+  #     - "3002:3002"
+  #   networks:
+  #     - ecommerce-net
+  #   restart: always
 
   postgres:
     image: postgres:14
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: ecommerce
+      POSTGRES_DB: ecommerce_user # default, but we create more below
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5432:5432"
     networks:
