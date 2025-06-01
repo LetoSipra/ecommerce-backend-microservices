@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './auth/auth.module';
+import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import metadata from './metadata';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   await SwaggerModule.loadPluginMetadata(metadata);
   const config = new DocumentBuilder()
     .setTitle('Cats example')
@@ -23,6 +22,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
