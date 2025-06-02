@@ -6,20 +6,23 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Request } from 'express';
-
-// Extend the Request interface to include 'user'
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: {
-      id: string;
-      role: string;
-    };
-  }
-}
+import { Role } from './role.enum';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from './decorator/public.decorator';
 
 @Injectable()
 export class UserVerificationGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
     const req = context.switchToHttp().getRequest<Request>();
 
     const auth = req.headers['authorization'] as string;
@@ -41,7 +44,7 @@ export class UserVerificationGuard implements CanActivate {
       }
 
       const data = (await response.json()) as {
-        user?: { id: string; role: string };
+        user?: { id: string; role: Role };
       };
 
       const user = data?.user;

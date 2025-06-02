@@ -9,35 +9,35 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
+import { InventoriesService } from './inventories.service';
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { Public } from 'src/auth/decorator/public.decorator';
 
-@Controller('categories')
-export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+@Controller('inventories')
+export class InventoriesController {
+  constructor(private readonly inventoriesService: InventoriesService) {}
 
   @Post()
   @ApiBearerAuth('jwt')
   @Roles(Role.ADMIN)
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+  create(@Body() createInventoryDto: CreateInventoryDto) {
+    return this.inventoriesService.create(createInventoryDto);
   }
 
   @Get()
   @Public()
   findAll() {
-    return this.categoriesService.findAll();
+    return this.inventoriesService.findAll();
   }
 
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
+    return this.inventoriesService.findOne(id);
   }
 
   @Patch(':id')
@@ -46,15 +46,15 @@ export class CategoriesController {
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   update(
     @Param('id') id: string,
-    @Body() updateCategoryDto: UpdateCategoryDto,
+    @Body() updateInventoryDto: UpdateInventoryDto,
   ) {
-    return this.categoriesService.update(id, updateCategoryDto);
+    return this.inventoriesService.update(id, updateInventoryDto);
   }
 
   @Delete(':id')
   @ApiBearerAuth('jwt')
   @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+    return this.inventoriesService.remove(id);
   }
 }
