@@ -1,0 +1,5 @@
+/* eslint-disable */
+export default async () => {
+    const t = {};
+    return { "@nestjs/swagger": { "models": [[import("./cart/dto/add-cart-item.dto"), { "AddCartItemDto": { productId: { required: true, type: () => String, format: "uuid" }, quantity: { required: true, type: () => Number, minimum: 1 } } }], [import("./cart/dto/create-cart.dto"), { "CreateCartDto": { userId: { required: true, type: () => String, format: "uuid" } } }], [import("./cart/dto/update-cart-item.dto"), { "UpdateCartItemDto": { quantity: { required: false, type: () => Number, minimum: 1 } } }], [import("./cart/dto/update-cart.dto"), { "UpdateCartDto": {} }]], "controllers": [[import("./cart/cart.controller"), { "CartController": { "getCartByUser": { type: Object }, "addOrUpdateItem": {}, "removeItem": {}, "clearCart": {} } }]] } };
+};

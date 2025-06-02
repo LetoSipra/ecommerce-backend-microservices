@@ -6,8 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { InventoriesService } from './inventories.service';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
@@ -34,6 +32,18 @@ export class InventoriesController {
     return this.inventoriesService.findAll();
   }
 
+  @Patch('by-product/:productId')
+  @Public()
+  updateByProductId(
+    @Param('productId') productId: string,
+    @Body() updateInventoryDto: UpdateInventoryDto,
+  ) {
+    return this.inventoriesService.updateByProductId(
+      productId,
+      updateInventoryDto,
+    );
+  }
+
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
@@ -43,7 +53,6 @@ export class InventoriesController {
   @Patch(':id')
   @ApiBearerAuth('jwt')
   @Roles(Role.ADMIN)
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   update(
     @Param('id') id: string,
     @Body() updateInventoryDto: UpdateInventoryDto,

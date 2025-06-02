@@ -6,8 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -43,7 +41,6 @@ export class CategoriesController {
   @Patch(':id')
   @ApiBearerAuth('jwt')
   @Roles(Role.ADMIN)
-  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
