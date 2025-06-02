@@ -1,17 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { SignInDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient } from 'generated/prisma';
+import { PrismaClient, User } from 'generated/prisma';
 import bcrypt from 'bcrypt';
-import { CreateSignInUserResponse } from '../users/types';
 
 const prisma = new PrismaClient();
 
 @Injectable()
 export class AuthService {
-  constructor(private jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
-  async signIn(signInDto: SignInDto): Promise<CreateSignInUserResponse> {
+  async signIn(signInDto: SignInDto): Promise<{
+    user: Omit<User, 'password'>;
+    token: string;
+  }> {
     const { email, password } = signInDto;
     try {
       const user = await prisma.user.findUnique({
@@ -19,12 +25,13 @@ export class AuthService {
           email,
         },
       });
+
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new UnauthorizedException('Invalid credentials');
       }
       const isValid = await bcrypt.compare(password, user.password);
       if (!isValid) {
-        throw new Error('Invalid credentials');
+        throw new UnauthorizedException('Invalid credentials');
       }
 
       const payload = {
@@ -37,8 +44,10 @@ export class AuthService {
       const { password: pwd, ...userWithoutPassword } = user;
       return { user: userWithoutPassword, token };
     } catch (error) {
-      console.log(error);
-      throw new Error('Invalid credentials');
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to sign in');
     }
   }
 }

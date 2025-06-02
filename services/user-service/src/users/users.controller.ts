@@ -12,7 +12,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 //import { ApiBody } from '@nestjs/swagger';
-import { Public } from 'src/auth/constants/authPublicMetadata';
+import { Public } from 'src/auth/decorator/public.decorator';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('users')
@@ -39,7 +39,6 @@ export class UsersController {
 
   @Patch(':id')
   @ApiBearerAuth('jwt')
-  //@ApiBody({ type: UpdateUserDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,

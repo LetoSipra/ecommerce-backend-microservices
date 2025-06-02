@@ -9,19 +9,18 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto } from './dto/signInDto';
-import { Public } from './constants/authPublicMetadata';
+import { Public } from './decorator/public.decorator';
 import { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 export interface JwtPayload {
   id: string;
   role: string;
-  // add other fields if needed
 }
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -29,8 +28,9 @@ export class AuthController {
   signIn(@Body() signInDto: SignInDto) {
     return this.authService.signIn(signInDto);
   }
-  @ApiBearerAuth('jwt')
+
   @Get('verify')
+  @ApiBearerAuth('jwt')
   //Global auth-guard active for non public routes
   verifyToken(@Req() req: Request & { user: JwtPayload }) {
     return {
