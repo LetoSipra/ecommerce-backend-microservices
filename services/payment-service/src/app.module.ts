@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { PaymentModule } from './payment/payment.module';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { UserVerificationGuard } from './auth/user-verification.guard';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [PaymentModule, ConfigModule.forRoot({ isGlobal: true })],
+  controllers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: UserVerificationGuard,
+    },
+  ],
 })
 export class AppModule {}
