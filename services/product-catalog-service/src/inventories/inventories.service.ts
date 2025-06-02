@@ -68,6 +68,17 @@ export class InventoriesService {
     }
   }
 
+  async updateByProductId(
+    productId: string,
+    updateInventoryDto: UpdateInventoryDto,
+  ): Promise<Inventory> {
+    const inventory = await this.prisma.inventory.findUnique({
+      where: { productId },
+    });
+    if (!inventory) throw new NotFoundException('Inventory not found');
+    return this.update(inventory.id, updateInventoryDto);
+  }
+
   async update(
     id: string,
     updateInventoryDto: UpdateInventoryDto,
