@@ -1,10 +1,9 @@
 import { ApiHideProperty, PartialType } from '@nestjs/swagger';
 import { CreateCategoryDto } from './create-category.dto';
-import { Validate } from 'class-validator';
-import { AtLeastOneField } from '../validators/at-least-one-field.validator';
+import { AtLeastOneField } from 'src/validators/at-least-one-field.validator';
 
 export class UpdateCategoryDto extends PartialType(CreateCategoryDto) {
   @ApiHideProperty()
-  @Validate(AtLeastOneField)
+  @AtLeastOneField(['name', 'description'])
   _atLeastOne?: unknown;
 }
