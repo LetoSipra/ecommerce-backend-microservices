@@ -18,6 +18,12 @@ export class NotificationService {
     private readonly ethereal: EtherealMailService,
   ) {}
 
+  async findAll(): Promise<Notification[]> {
+    return this.prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   /**
    * Enqueue a notification only if no active one exists with same (type, recipient, payload).
    * Uses Prisma JSON path queries for payload fields.

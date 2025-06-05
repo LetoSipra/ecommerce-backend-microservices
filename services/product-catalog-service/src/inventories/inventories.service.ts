@@ -41,6 +41,15 @@ export class InventoriesService {
     }
   }
 
+  async findByProductId(productId: string): Promise<Inventory> {
+    const inventory = await this.prisma.inventory.findUnique({
+      where: { productId },
+      include: { product: true },
+    });
+    if (!inventory) throw new NotFoundException('Inventory not found');
+    return inventory;
+  }
+
   async findAll(): Promise<Inventory[]> {
     try {
       return await this.prisma.inventory.findMany({
