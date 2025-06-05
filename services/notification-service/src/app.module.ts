@@ -15,6 +15,7 @@ import { NotificationProcessor } from './workers/notification.processor';
     RabbitMQModule,
     NotificationModule,
   ],
-  providers: [NotificationConsumer, NotificationProcessor],
+  controllers: [NotificationConsumer],
+  providers: [NotificationProcessor],
 })
 export class AppModule {}

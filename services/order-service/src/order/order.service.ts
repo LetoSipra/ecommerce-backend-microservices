@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -9,12 +10,14 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order, OrderItem } from 'generated/prisma';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { ProductInventoryService } from './product-inventory.service';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly productInventory: ProductInventoryService,
+    @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
   ) {}
 
   async create(
@@ -49,6 +52,17 @@ export class OrderService {
         include: { items: true },
       });
 
+      for (const item of items) {
+        await this.productInventory.checkAvailable(
+          item.productId,
+          item.quantity,
+        );
+        await this.productInventory.decrementQuantity(
+          item.productId,
+          item.quantity,
+        );
+      }
+
       // Decrement stock for each item
       for (const item of items) {
         await this.productInventory.decrementQuantity(
@@ -57,8 +71,22 @@ export class OrderService {
         );
       }
 
+      this.rabbitClient.emit('order.placed', {
+        userId: order.userId,
+        orderId: order.id,
+        email: createOrderDto.email,
+        total: order.total,
+      });
+
       return order;
-    } catch {
+    } catch (err) {
+      console.error('Order creation error:', err);
+      if (
+        err instanceof BadRequestException ||
+        err instanceof NotFoundException
+      ) {
+        throw err;
+      }
       throw new BadRequestException('Failed to create order');
     }
   }

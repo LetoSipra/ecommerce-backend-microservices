@@ -1,6 +1,12 @@
 // src/notification/notification.controller.ts
 
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  Get,
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from 'generated/prisma';
@@ -20,5 +26,10 @@ export class NotificationController {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       throw new BadRequestException(err.message);
     }
+  }
+
+  @Get()
+  async findAll(): Promise<Notification[]> {
+    return this.notifService.findAll();
   }
 }

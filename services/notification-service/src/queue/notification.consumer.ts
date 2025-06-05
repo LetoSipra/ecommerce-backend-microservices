@@ -1,8 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { EventPattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
+import { Controller, Logger } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { NotificationChannel } from 'generated/prisma';
 import { NotificationService } from 'src/notification/notification.service';
-import type { ConfirmChannel, Message } from 'amqplib';
 
 interface OrderPlacedEvent {
   userId: string;
@@ -11,20 +10,14 @@ interface OrderPlacedEvent {
   total: number;
 }
 
-@Injectable()
+@Controller()
 export class NotificationConsumer {
   private readonly logger = new Logger(NotificationConsumer.name);
 
   constructor(private readonly notifService: NotificationService) {}
 
   @EventPattern('order.placed')
-  async handleOrderPlaced(
-    @Payload() data: OrderPlacedEvent,
-    @Ctx() context: RmqContext,
-  ) {
-    const channelRef = context.getChannelRef() as ConfirmChannel;
-    const originalMsg = context.getMessage() as Message;
-
+  async handleOrderPlaced(@Payload() data: OrderPlacedEvent) {
     this.logger.log(`Received 'order.placed' event: ${JSON.stringify(data)}`);
 
     try {
@@ -37,11 +30,11 @@ export class NotificationConsumer {
         template: 'ORDER_CONFIRMATION',
         payload: { orderId, total, userId },
       });
-      channelRef.ack(originalMsg);
+      // No manual ack needed! NestJS handles it.
     } catch (err: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       this.logger.error(`Failed to enqueue notification: ${err.message}`);
-      channelRef.ack(originalMsg);
+      // No manual ack needed!
     }
   }
 }

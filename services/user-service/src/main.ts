@@ -12,8 +12,8 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('User Microservice')
+    .setDescription('Handle users and login & verify')
     .setVersion('1.0')
     .addBearerAuth(
       {

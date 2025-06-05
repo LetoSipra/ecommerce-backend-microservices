@@ -11,8 +11,10 @@ async function bootstrap() {
   );
   await SwaggerModule.loadPluginMetadata(metadata);
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Product Catalog Microservoce')
+    .setDescription(
+      'Microservice for managing product categories, products, and inventories in the ecommerce platform.',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {

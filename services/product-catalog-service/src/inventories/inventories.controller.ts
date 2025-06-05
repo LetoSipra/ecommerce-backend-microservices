@@ -32,6 +32,12 @@ export class InventoriesController {
     return this.inventoriesService.findAll();
   }
 
+  @Get('by-product/:productId')
+  @Public()
+  findByProductId(@Param('productId') productId: string) {
+    return this.inventoriesService.findByProductId(productId);
+  }
+
   @Patch('by-product/:productId')
   @Public()
   updateByProductId(
