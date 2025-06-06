@@ -34,8 +34,9 @@ export class UserVerificationGuard implements CanActivate {
     }
 
     try {
-      // Use native fetch to call user service
-      const response = await fetch('http://localhost:3001/auth/verify', {
+      const userServiceUrl =
+        process.env.USER_SERVICE_URL || 'http://user-service:3001';
+      const response = await fetch(`${userServiceUrl}/auth/verify`, {
         headers: { Authorization: auth },
       });
 

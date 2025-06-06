@@ -24,6 +24,7 @@ async function bootstrap() {
       },
       'jwt',
     )
+    .addServer('/product-catalog-service')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

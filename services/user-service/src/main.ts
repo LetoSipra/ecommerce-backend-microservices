@@ -7,6 +7,8 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // app.setGlobalPrefix('user-service');
+
   await SwaggerModule.loadPluginMetadata(metadata);
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
@@ -23,6 +25,7 @@ async function bootstrap() {
       },
       'jwt',
     )
+    .addServer('/user-service')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

@@ -1,9 +1,10 @@
 import { CreateUserDto } from './create-user.dto';
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsBoolean } from 'class-validator';
+import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { IsBoolean, IsOptional } from 'class-validator';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
-  @ApiProperty({ description: 'Account active ?' })
+  @ApiPropertyOptional({ description: 'Account active ?' })
   @IsBoolean()
-  isActive: boolean;
+  @IsOptional()
+  isActive?: boolean;
 }

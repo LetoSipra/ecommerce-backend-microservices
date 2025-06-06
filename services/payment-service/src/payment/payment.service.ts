@@ -66,17 +66,23 @@ export class PaymentService {
         },
       });
 
-      const x = await fetch(`http://localhost:3003/orders/${payment.orderId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(authHeader ? { Authorization: authHeader } : {}),
+      const orderServiceUrl =
+        process.env.ORDER_SERVICE_URL || 'http://order-service:3004';
+
+      const editOrderStatus = await fetch(
+        `${orderServiceUrl}/orders/${payment.orderId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(authHeader ? { Authorization: authHeader } : {}),
+          },
+          body: JSON.stringify({ status: 'PAID' }),
         },
-        body: JSON.stringify({ status: 'PAID' }),
-      });
-      if (!x.ok) {
-        console.log(x);
-        throw new BadRequestException('FFWREFGVREGERG ');
+      );
+      if (!editOrderStatus.ok) {
+        console.log(editOrderStatus);
+        throw new BadRequestException('Failed to update order status');
       }
       return confirmedIntent;
     } catch (err) {

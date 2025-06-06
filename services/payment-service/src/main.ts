@@ -24,9 +24,10 @@ async function bootstrap() {
       },
       'jwt',
     )
+    .addServer('/payment-service')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(process.env.PORT ?? 3004);
+  await app.listen(process.env.PORT ?? 3006, '0.0.0.0');
 }
 bootstrap();

@@ -1,4 +1,3 @@
-// src/stripe/stripe.provider.ts
 import { Provider } from '@nestjs/common';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';

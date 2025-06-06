@@ -27,9 +27,12 @@ async function bootstrap() {
 
   await SwaggerModule.loadPluginMetadata(metadata);
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('Notification Service')
+    .setDescription(
+      'Microservice for handling notifications in the ecommerce platform.',
+    )
     .setVersion('1.0')
+    .addServer('/notification-service')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
