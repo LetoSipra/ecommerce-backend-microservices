@@ -10,8 +10,9 @@ import { UserVerificationGuard } from './auth/user-verification.guard';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: UserVerificationGuard,
+      useExisting: UserVerificationGuard,
     },
+    UserVerificationGuard,
   ],
 })
 export class AppModule {}

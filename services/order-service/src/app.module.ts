@@ -10,12 +10,14 @@ import { RolesGuard } from './auth/roles.guard';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: UserVerificationGuard,
+      useExisting: UserVerificationGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useExisting: RolesGuard,
     },
+    UserVerificationGuard,
+    RolesGuard,
   ],
 })
 export class AppModule {}

@@ -13,8 +13,17 @@ export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const { categoryId, name, price, sku, description, imageUrl, isActive } =
-      createProductDto;
+    const {
+      quantity,
+      reserved,
+      categoryId,
+      name,
+      price,
+      sku,
+      description,
+      imageUrl,
+      isActive,
+    } = createProductDto;
 
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
@@ -34,6 +43,12 @@ export class ProductsService {
           description,
           imageUrl,
           isActive,
+          inventory: {
+            create: {
+              quantity: quantity || 0,
+              reserved: reserved || 0,
+            },
+          },
         },
         include: {
           category: true,

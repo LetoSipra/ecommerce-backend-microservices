@@ -5,14 +5,16 @@ import {
 } from '@nestjs/common';
 import { SignInDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient, User } from 'generated/prisma';
+import { User } from 'generated/prisma';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async signIn(signInDto: SignInDto): Promise<{
     user: Omit<User, 'password'>;
@@ -20,7 +22,7 @@ export class AuthService {
   }> {
     const { email, password } = signInDto;
     try {
-      const user = await prisma.user.findUnique({
+      const user = await this.prisma.user.findUnique({
         where: {
           email,
         },

@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 
-const PRODUCT_SERVICE_URL = 'http://localhost:3000';
+const PRODUCT_SERVICE_URL =
+  process.env.PRODUCT_SERVICE_URL || 'http://localhost:3000';
 
 interface ProductInventory {
   quantity: number;

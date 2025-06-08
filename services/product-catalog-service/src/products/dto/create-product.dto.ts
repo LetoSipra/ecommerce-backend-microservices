@@ -8,6 +8,7 @@ import {
   IsUrl,
   Min,
   MaxLength,
+  IsInt,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -58,6 +59,24 @@ export class CreateProductDto {
   })
   @IsUUID()
   categoryId: string;
+
+  @ApiProperty({
+    description: 'Available quantity of the product',
+    example: 100,
+  })
+  @IsInt()
+  @Min(0)
+  quantity: number;
+
+  @ApiPropertyOptional({
+    description: 'Reserved quantity of the product',
+    example: 10,
+    default: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reserved?: number = 0;
 
   @ApiPropertyOptional({
     description: 'Is the product active?',

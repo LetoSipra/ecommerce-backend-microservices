@@ -11,12 +11,14 @@ import { InventoriesModule } from './inventories/inventories.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: UserVerificationGuard,
+      useExisting: UserVerificationGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useExisting: RolesGuard,
     },
+    UserVerificationGuard,
+    RolesGuard,
   ],
   exports: [],
 })

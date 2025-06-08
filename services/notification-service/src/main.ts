@@ -1,5 +1,3 @@
-// src/main.ts
-
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
@@ -11,7 +9,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // 1) Connect RabbitMQ microservice so @EventPattern works
   const rabbitUrl = configService.get<string>('RABBITMQ_URL');
   if (!rabbitUrl) {
     throw new Error('RABBITMQ_URL is not defined in environment variables');
@@ -37,11 +34,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.startAllMicroservices(); // start listening on RabbitMQ
+  await app.startAllMicroservices();
 
-  // 2) Start the HTTP server for REST endpoints
   await app.listen(3005, () => {
     console.log('NotificationService listening');
   });
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();
