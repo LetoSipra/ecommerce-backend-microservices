@@ -8,12 +8,12 @@ import {
   Delete,
 } from '@nestjs/common';
 import { InventoriesService } from './inventories.service';
-import { CreateInventoryDto } from './dto/create-inventory.dto';
-import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { Public } from 'src/auth/decorator/public.decorator';
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 
 @Controller('inventories')
 export class InventoriesController {

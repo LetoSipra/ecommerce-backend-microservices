@@ -1,0 +1,169 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: Lint every service in parallel
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint all services
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - user-service
+          - product-catalog-service
+          - shopping-cart-service
+          - order-service
+          - notification-service
+          - payment-service
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cache node_modules for ${{ matrix.service }}
+        uses: actions/cache@v3
+        with:
+          path: services/${{ matrix.service }}/node_modules
+          key: node-modules-${{ matrix.service }}-${{ runner.os }}-${{ hashFiles('services/' + matrix.service + '/package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ matrix.service }}-${{ runner.os }}-
+
+      - name: Install dependencies for ${{ matrix.service }}
+        working-directory: ./services/${{ matrix.service }}
+        run: |
+          npm ci
+
+      - name: Run linter for ${{ matrix.service }}
+        working-directory: ./services/${{ matrix.service }}
+        run: |
+          npm run lint
+
+  # ─────────────────────────────────────────────
+  # Job 2: Build Compose stack and run E2E tests
+  # ─────────────────────────────────────────────
+    e2e-test:
+    name: Build Docker Compose & Run E2E Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build and start all services
+        run: |
+          docker-compose -f docker-compose.yml up -d --build
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # Replace this:
+      # - name: Wait for services to be healthy
+      #   run: |
+      #     echo "⏳ Waiting 30s for services to initialize..."
+      #     sleep 30
+      #
+      # With the following polling loop:
+      - name: Wait for services to be healthy
+        run: |
+          echo "🕵️‍♂️  Starting to poll container health statuses…"
+          # Give containers a few seconds to begin initializing
+          sleep 5
+
+          # (1) How long total we’re willing to wait (in seconds)
+          TIMEOUT=300
+          # (2) How often we poll (in seconds)
+          INTERVAL=5
+          ELAPSED=0
+
+          # (3) List out all of the service names exactly as they appear
+          #     in your `docker-compose.yml`. Order doesn’t strictly matter here,
+          #     but “upstream” services (e.g. postgres, rabbitmq, elasticsearch)
+          #     should appear before the services that depend on them.
+          SERVICES=(
+            "postgres"
+            "rabbitmq"
+            "elasticsearch"
+            "user-service"
+            "product-catalog-service"
+            "shopping-cart-service"
+            "order-service"
+            "notification-service"
+            "payment-service"
+            "nginx"
+            "kibana"
+          )
+
+          # Poll loop
+          while true; do
+            ALL_HEALTHY=true
+
+            for SVC in "${SERVICES[@]}"; do
+              # (a) Get the container ID for this service
+              CID=$(docker-compose -f docker-compose.yml ps -q "$SVC")
+
+              if [ -z "$CID" ]; then
+                echo "✖ $SVC: container not found yet"
+                ALL_HEALTHY=false
+              else
+                # (b) Inspect its Health.Status
+                STATUS=$(docker inspect -f '{{ .State.Health.Status }}' "$CID" 2>/dev/null || echo "no-healthcheck")
+
+                if [ "$STATUS" != "healthy" ]; then
+                  echo "✖ $SVC: $STATUS"
+                  ALL_HEALTHY=false
+                else
+                  echo "✔ $SVC: healthy"
+                fi
+              fi
+            done
+
+            if $ALL_HEALTHY; then
+              echo "✅ All services are healthy!"
+              break
+            fi
+
+            if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+              echo "⏰ Timeout of ${TIMEOUT}s reached while waiting for health checks."
+              echo "Current statuses (docker-compose ps):"
+              docker-compose -f docker-compose.yml ps
+              exit 1
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+      - name: Install E2E dependencies
+        working-directory: ./tests/e2e
+        run: |
+          npm ci
+
+      - name: Run E2E test suite
+        working-directory: ./tests/e2e
+        run: |
+          npm test:e2e
+
+      - name: Tear down Docker Compose
+        if: always()
+        run: |
+          docker-compose -f docker-compose.yml down --volumes

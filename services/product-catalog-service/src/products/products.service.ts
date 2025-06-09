@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,10 +8,14 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
+  ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
     const {
@@ -55,6 +60,18 @@ export class ProductsService {
           inventory: true,
         },
       });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Product created',
+        productId: product.id,
+        name: product.name,
+        sku: product.sku,
+        price: product.price,
+        categoryId: product.categoryId,
+        createdAt: product.createdAt,
+      });
+
       return product;
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -125,6 +142,18 @@ export class ProductsService {
           inventory: true,
         },
       });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Product updated',
+        productId: updatedProduct.id,
+        name: updatedProduct.name,
+        sku: updatedProduct.sku,
+        price: updatedProduct.price,
+        categoryId: updatedProduct.categoryId,
+        updatedAt: updatedProduct.updatedAt,
+      });
+
       return updatedProduct;
     } catch (error: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -141,6 +170,18 @@ export class ProductsService {
       if (!existing) {
         throw new NotFoundException('Product not found');
       }
+
+      this.logger.log({
+        level: 'info',
+        message: 'Removing product',
+        productId: id,
+        name: existing.name,
+        sku: existing.sku,
+        price: existing.price,
+        categoryId: existing.categoryId,
+        removedAt: new Date().toISOString(),
+      });
+
       return await this.prisma.product.delete({
         where: { id },
         include: {

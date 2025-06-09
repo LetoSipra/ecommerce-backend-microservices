@@ -3,12 +3,15 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import metadata from './metadata';
 import { ValidationPipe } from '@nestjs/common';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
+  app.useGlobalFilters(app.get(AllExceptionsFilter));
+
   await SwaggerModule.loadPluginMetadata(metadata);
   const config = new DocumentBuilder()
     .setTitle('Cats example')

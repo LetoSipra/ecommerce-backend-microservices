@@ -2,15 +2,20 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Inventory } from 'generated/prisma';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class InventoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
+  ) {}
 
   async create(createInventoryDto: CreateInventoryDto): Promise<Inventory> {
     const { productId, quantity, reserved } = createInventoryDto;
@@ -23,6 +28,15 @@ export class InventoriesService {
     }
 
     try {
+      this.logger.log({
+        level: 'info',
+        message: 'Creating inventory',
+        productId,
+        quantity,
+        reserved,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.inventory.create({
         data: {
           productId,
@@ -85,6 +99,15 @@ export class InventoriesService {
       where: { productId },
     });
     if (!inventory) throw new NotFoundException('Inventory not found');
+
+    this.logger.log({
+      level: 'info',
+      message: 'Updating inventory by productId',
+      productId,
+      update: updateInventoryDto,
+      timestamp: new Date().toISOString(),
+    });
+
     return this.update(inventory.id, updateInventoryDto);
   }
 
@@ -122,6 +145,14 @@ export class InventoriesService {
         data.reserved = { decrement: updateInventoryDto.decrementReserved };
       }
 
+      this.logger.log({
+        level: 'info',
+        message: 'Updating inventory',
+        inventoryId: id,
+        update: data,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.inventory.update({
         where: { id },
         data,
@@ -139,6 +170,14 @@ export class InventoriesService {
       if (!existing) {
         throw new NotFoundException('Inventory not found');
       }
+
+      this.logger.log({
+        level: 'info',
+        message: 'Deleting inventory',
+        inventoryId: id,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.inventory.delete({ where: { id } });
     } catch {
       throw new BadRequestException('Failed to delete inventory');

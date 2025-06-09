@@ -11,10 +11,12 @@ import { Order, OrderItem } from 'generated/prisma';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { ProductInventoryService } from './product-inventory.service';
 import { ClientProxy } from '@nestjs/microservices';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class OrderService {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
     private readonly prisma: PrismaService,
     private readonly productInventory: ProductInventoryService,
     @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
@@ -71,6 +73,15 @@ export class OrderService {
         );
       }
 
+      this.logger.log({
+        level: 'info',
+        message: 'Order created successfully',
+        orderId: order.id,
+        userId: order.userId,
+        total: order.total,
+        timestamp: new Date().toISOString(),
+      });
+
       this.rabbitClient.emit('order.placed', {
         userId: order.userId,
         orderId: order.id,
@@ -123,6 +134,14 @@ export class OrderService {
       const order = await this.prisma.order.findUnique({ where: { id } });
       if (!order) throw new NotFoundException('Order not found');
 
+      this.logger.log({
+        level: 'info',
+        message: 'Updating order',
+        orderId: id,
+        update: updateOrderDto,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.order.update({
         where: { id },
         data: updateOrderDto,
@@ -137,6 +156,12 @@ export class OrderService {
     try {
       const order = await this.prisma.order.findUnique({ where: { id } });
       if (!order) throw new NotFoundException('Order not found');
+      this.logger.log({
+        level: 'info',
+        message: 'Removing order',
+        orderId: id,
+        timestamp: new Date().toISOString(),
+      });
       return await this.prisma.order.delete({ where: { id } });
     } catch {
       throw new BadRequestException('Failed to remove order');

@@ -10,10 +10,12 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 import Stripe from 'stripe';
 import { STRIPE_CLIENT } from 'src/stripe/stripe.provider';
 import { Payment, PaymentStatus } from 'generated/prisma';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class PaymentService {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
     private readonly prisma: PrismaService,
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
   ) {}
@@ -25,6 +27,15 @@ export class PaymentService {
         currency: 'usd',
         payment_method_types: ['card'], // ← force card payments only
         metadata: { orderId: createPaymentDto.orderId },
+      });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Payment intent created',
+        paymentIntentId: paymentIntent.id,
+        orderId: createPaymentDto.orderId,
+        amount: createPaymentDto.amount,
+        timestamp: new Date().toISOString(),
       });
 
       return await this.prisma.payment.create({
@@ -84,6 +95,16 @@ export class PaymentService {
         console.log(editOrderStatus);
         throw new BadRequestException('Failed to update order status');
       }
+
+      this.logger.log({
+        level: 'info',
+        message: 'Payment confirmed',
+        paymentIntentId: confirmedIntent.id,
+        orderId: payment.orderId,
+        amount: payment.amount,
+        timestamp: new Date().toISOString(),
+      });
+
       return confirmedIntent;
     } catch (err) {
       console.log(err);
@@ -102,6 +123,15 @@ export class PaymentService {
       if (!payment)
         throw new NotFoundException('Payment not found for providerId');
       const data = { ...update };
+
+      this.logger.log({
+        level: 'info',
+        message: 'Updating payment by providerId',
+        providerId,
+        update,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.payment.update({
         where: { id: payment.id },
         data,
@@ -136,6 +166,15 @@ export class PaymentService {
     try {
       const payment = await this.prisma.payment.findUnique({ where: { id } });
       if (!payment) throw new NotFoundException('Payment not found');
+
+      this.logger.log({
+        level: 'info',
+        message: 'Updating payment',
+        paymentId: id,
+        updateData: updatePaymentDto,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.payment.update({
         where: { id },
         data: updatePaymentDto,
@@ -149,6 +188,14 @@ export class PaymentService {
     try {
       const payment = await this.prisma.payment.findUnique({ where: { id } });
       if (!payment) throw new NotFoundException('Payment not found');
+
+      this.logger.log({
+        level: 'info',
+        message: 'Removing payment',
+        paymentId: id,
+        timestamp: new Date().toISOString(),
+      });
+
       return await this.prisma.payment.delete({ where: { id } });
     } catch {
       throw new BadRequestException('Failed to remove payment');

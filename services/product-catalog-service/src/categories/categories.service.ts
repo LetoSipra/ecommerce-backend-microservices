@@ -2,15 +2,20 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
+  ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const { name, description } = createCategoryDto;
@@ -19,6 +24,15 @@ export class CategoriesService {
       const category = await this.prisma.category.create({
         data: { name, description },
       });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Category created',
+        categoryId: category.id,
+        categoryName: category.name,
+        timestamp: category.createdAt,
+      });
+
       return category;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -72,6 +86,15 @@ export class CategoriesService {
           products: true,
         },
       });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Category updated',
+        categoryId: updatedCategory.id,
+        categoryName: updatedCategory.name,
+        timestamp: updatedCategory.updatedAt,
+      });
+
       return updatedCategory;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
@@ -89,6 +112,15 @@ export class CategoriesService {
         throw new NotFoundException('Category not found');
       }
       const category = await this.prisma.category.delete({ where: { id } });
+
+      this.logger.log({
+        level: 'info',
+        message: 'Category deleted',
+        categoryId: category.id,
+        categoryName: category.name,
+        timestamp: new Date().toISOString(),
+      });
+
       return category;
     } catch {
       throw new BadRequestException('Failed to delete category');

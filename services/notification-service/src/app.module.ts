@@ -7,6 +7,9 @@ import { NotificationModule } from './notification/notification.module';
 import { RabbitMQModule } from './queue/rabbitmq.module';
 import { NotificationConsumer } from './queue/notification.consumer';
 import { NotificationProcessor } from './workers/notification.processor';
+import { LoggerModule } from './logger/logger.module';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -14,8 +17,10 @@ import { NotificationProcessor } from './workers/notification.processor';
     ScheduleModule.forRoot(),
     RabbitMQModule,
     NotificationModule,
+    LoggerModule,
+    HealthModule,
   ],
   controllers: [NotificationConsumer],
-  providers: [NotificationProcessor],
+  providers: [NotificationProcessor, AllExceptionsFilter],
 })
 export class AppModule {}

@@ -4,12 +4,15 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import metadata from './metadata';
 import * as express from 'express';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   );
+  app.useGlobalFilters(app.get(AllExceptionsFilter));
+
   app.use('/payments/webhook', express.raw({ type: 'application/json' }));
   await SwaggerModule.loadPluginMetadata(metadata);
   const config = new DocumentBuilder()

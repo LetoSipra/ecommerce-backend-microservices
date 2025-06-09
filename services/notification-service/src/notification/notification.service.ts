@@ -1,10 +1,16 @@
 // src/notification/notification.service.ts
 
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  Inject,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { EtherealMailService } from 'src/providers/ethereal-mail.provider';
 import { Notification, NotificationStatus } from 'generated/prisma';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 // ...existing imports...
 
@@ -14,6 +20,7 @@ export class NotificationService {
   private readonly MAX_RETRIES = 5;
 
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly esLogger: WinstonLogger,
     private readonly prisma: PrismaService,
     private readonly ethereal: EtherealMailService,
   ) {}
@@ -115,6 +122,20 @@ export class NotificationService {
           typeof item.payload === 'string'
             ? item.payload
             : JSON.stringify(item.payload ?? ''),
+      });
+
+      this.esLogger.log({
+        level: 'info',
+        message: 'Notification sent',
+        notificationId: item.id,
+        providerId: result.messageId,
+        timestamp: result.timestamp,
+        previewUrl: result.previewUrl,
+        additionalInfo: {
+          recipient: item.recipient,
+          type: item.type,
+          payload: item.payload,
+        },
       });
 
       await this.prisma.notification.update({

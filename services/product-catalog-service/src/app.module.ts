@@ -5,9 +5,18 @@ import { UserVerificationGuard } from './auth/user-verification.guard';
 import { RolesGuard } from './auth/roles.guard';
 import { ProductsModule } from './products/products.module';
 import { InventoriesModule } from './inventories/inventories.module';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+import { LoggerModule } from './logger/logger.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
-  imports: [CategoriesModule, ProductsModule, InventoriesModule],
+  imports: [
+    CategoriesModule,
+    ProductsModule,
+    InventoriesModule,
+    LoggerModule,
+    HealthModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,
@@ -19,6 +28,7 @@ import { InventoriesModule } from './inventories/inventories.module';
     },
     UserVerificationGuard,
     RolesGuard,
+    AllExceptionsFilter,
   ],
   exports: [],
 })

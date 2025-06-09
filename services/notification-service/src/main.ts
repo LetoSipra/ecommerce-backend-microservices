@@ -4,10 +4,12 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import metadata from './metadata';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  app.useGlobalFilters(app.get(AllExceptionsFilter));
 
   const rabbitUrl = configService.get<string>('RABBITMQ_URL');
   if (!rabbitUrl) {

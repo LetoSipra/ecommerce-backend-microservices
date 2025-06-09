@@ -2,15 +2,18 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { Cart, CartItem } from 'generated/prisma';
 import { ProductInventoryService } from './product-inventory.service';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class CartService {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
     private readonly prisma: PrismaService,
     private readonly productInventory: ProductInventoryService,
   ) {}
@@ -30,6 +33,18 @@ export class CartService {
           include: { items: true },
         });
       }
+
+      this.logger.log({
+        level: 'info',
+        message: 'Cart retrieved or created',
+        cartId: cart.id,
+        timestamp: cart.createdAt,
+        additionalInfo: {
+          userId: cart.userId,
+          itemCount: cart.items.length,
+        },
+      });
+
       return cart;
     } catch {
       throw new BadRequestException('Failed to get or create cart');
@@ -70,11 +85,34 @@ export class CartService {
       }
 
       if (existingItem) {
+        this.logger.log({
+          level: 'info',
+          message: 'Cart item updated',
+          cartId: cart.id,
+          productId: dto.productId,
+          quantity: dto.quantity,
+          timestamp: cart.createdAt,
+          additionalInfo: {
+            userId,
+            existingItemId: existingItem ? existingItem.id : null,
+          },
+        });
         return await this.prisma.cartItem.update({
           where: { id: existingItem.id },
           data: { quantity: dto.quantity },
         });
       } else {
+        this.logger.log({
+          level: 'info',
+          message: 'Cart item added',
+          cartId: cart.id,
+          productId: dto.productId,
+          quantity: dto.quantity,
+          timestamp: cart.createdAt,
+          additionalInfo: {
+            userId,
+          },
+        });
         return await this.prisma.cartItem.create({
           data: {
             cartId: cart.id,
@@ -105,6 +143,19 @@ export class CartService {
 
       // Release reserved quantity
       await this.productInventory.releaseProduct(productId, item.quantity);
+
+      this.logger.log({
+        level: 'info',
+        message: 'Cart item removed',
+        cartId: cart.id,
+        productId: item.productId,
+        quantity: item.quantity,
+        timestamp: cart.createdAt,
+        additionalInfo: {
+          userId,
+          itemId: item.id,
+        },
+      });
 
       return await this.prisma.cartItem.delete({ where: { id: item.id } });
     } catch {

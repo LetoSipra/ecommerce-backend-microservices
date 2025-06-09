@@ -1,0 +1,55 @@
+import { Controller, Get } from '@nestjs/common';
+import { Transport } from '@nestjs/microservices';
+import {
+  HealthCheckService,
+  HealthCheck,
+  HealthCheckResult,
+  PrismaHealthIndicator,
+  DiskHealthIndicator,
+  MemoryHealthIndicator,
+  MicroserviceHealthIndicator,
+  HttpHealthIndicator,
+} from '@nestjs/terminus';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Controller('health')
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private prisma: PrismaHealthIndicator,
+    private prismaService: PrismaService,
+    private memory: MemoryHealthIndicator,
+    private disk: DiskHealthIndicator,
+    private microservice: MicroserviceHealthIndicator,
+    private httpIndicator: HttpHealthIndicator,
+  ) {}
+
+  @Get()
+  @HealthCheck()
+  async check(): Promise<HealthCheckResult> {
+    return this.health.check([
+      () => this.prisma.pingCheck('database', this.prismaService),
+      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
+      () =>
+        this.disk.checkStorage('disk_usage', {
+          path: '/',
+          thresholdPercent: 0.9,
+        }),
+      () =>
+        this.microservice.pingCheck('rabbitmq', {
+          transport: Transport.RMQ,
+          options: {
+            urls: ['amqp://guest:guest@rabbitmq:5672'],
+            queue: 'notifications_queue',
+            queueOptions: { durable: true },
+          },
+        }),
+      () =>
+        this.httpIndicator.pingCheck(
+          'elasticsearch',
+          process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
+          { timeout: 3000 },
+        ),
+    ]);
+  }
+}
