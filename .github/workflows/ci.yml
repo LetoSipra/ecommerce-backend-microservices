@@ -114,7 +114,7 @@ jobs:
   #                 echo "✖ $SVC: $STATUS"
   #                 ALL_HEALTHY=false
   #               else
-  lint:
+  e2e-testing:
     name: E2E Test all services
     runs-on: ubuntu-latest
     strategy:
