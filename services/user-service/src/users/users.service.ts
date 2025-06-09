@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,10 +12,12 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { USER_SELECT } from 'src/prisma/selectors/selectors';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: WinstonLogger,
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
   ) {}
@@ -44,6 +47,19 @@ export class UsersService {
       };
 
       const token = await this.jwtService.signAsync(payload);
+
+      this.logger.log({
+        level: 'info',
+        message: 'User created successfully',
+        userId: user.id,
+        userEmail: user.email,
+        userRole: user.role,
+        timestamp: user.createdAt,
+        additionalInfo: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      });
 
       return { user, token };
     } catch (error) {
@@ -116,6 +132,19 @@ export class UsersService {
         newToken = await this.jwtService.signAsync(payload);
       }
 
+      this.logger.log({
+        level: 'info',
+        message: 'User updated successfully',
+        userId: updatedUser.id,
+        userEmail: updatedUser.email,
+        userRole: updatedUser.role,
+        timestamp: updatedUser.updatedAt,
+        additionalInfo: {
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+        },
+      });
+
       return { user: updatedUser, token: newToken };
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -132,12 +161,27 @@ export class UsersService {
 
   async remove(id: string): Promise<Omit<User, 'password'>> {
     try {
-      return await this.prisma.user.delete({
+      const deletedUser = await this.prisma.user.delete({
         where: {
           id,
         },
         select: USER_SELECT,
       });
+
+      this.logger.log({
+        level: 'info',
+        message: 'User deleted successfully',
+        userId: deletedUser.id,
+        userEmail: deletedUser.email,
+        userRole: deletedUser.role,
+        timestamp: deletedUser.updatedAt,
+        additionalInfo: {
+          firstName: deletedUser.firstName,
+          lastName: deletedUser.lastName,
+        },
+      });
+
+      return deletedUser;
     } catch (error) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (error.code === 'P2025') {
