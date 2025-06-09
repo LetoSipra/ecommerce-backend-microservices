@@ -114,49 +114,49 @@ jobs:
   #                 echo "✖ $SVC: $STATUS"
   #                 ALL_HEALTHY=false
   #               else
-  e2e-testing:
-    name: E2E Test all services
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service:
-          - user-service
-          - product-catalog-service
-          - shopping-cart-service
-          - order-service
-          - notification-service
-          - payment-service
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+e2e-testing:
+  name: E2E Test all services
+  runs-on: ubuntu-latest
+  strategy:
+    matrix:
+      service:
+        - user-service
+        - product-catalog-service
+        - shopping-cart-service
+        - order-service
+        - notification-service
+        - payment-service
+  defaults:
+    run:
+      shell: bash
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
 
-      - name: Cache node_modules for ${{ matrix.service }}
-        uses: actions/cache@v3
-        with:
-          path: services/${{ matrix.service }}/node_modules
-          key: node-modules-${{ matrix.service }}-${{ runner.os }}-${{ hashFiles(format('services/{0}/package-lock.json', matrix.service)) }}
-          restore-keys: |
-            node-modules-${{ matrix.service }}-${{ runner.os }}-
+    - name: Cache node_modules for ${{ matrix.service }}
+      uses: actions/cache@v3
+      with:
+        path: services/${{ matrix.service }}/node_modules
+        key: node-modules-${{ matrix.service }}-${{ runner.os }}-${{ hashFiles(format('services/{0}/package-lock.json', matrix.service)) }}
+        restore-keys: |
+          node-modules-${{ matrix.service }}-${{ runner.os }}-
 
-      - name: Install dependencies for ${{ matrix.service }}
-        working-directory: ./services/${{ matrix.service }}
-        run: |
-          npm ci
+    - name: Install dependencies for ${{ matrix.service }} (with retries)
+      working-directory: ./services/${{ matrix.service }}
+      run: |
+        for i in 1 2 3; do npm ci && break || sleep 10; done
 
-      - name: Generate Prisma client for ${{ matrix.service }}
-        working-directory: ./services/${{ matrix.service }}
-        run: |
-          npx prisma generate --schema=./prisma/schema.prisma
+    - name: Generate Prisma client for ${{ matrix.service }}
+      working-directory: ./services/${{ matrix.service }}
+      run: |
+        npx prisma generate --schema=./prisma/schema.prisma
 
-      - name: Run E2E test for ${{ matrix.service }}
-        working-directory: ./services/${{ matrix.service }}
-        run: |
-          npm run test:e2e
+    - name: Run E2E test for ${{ matrix.service }}
+      working-directory: ./services/${{ matrix.service }}
+      run: |
+        npm run test:e2e
