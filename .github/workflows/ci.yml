@@ -154,7 +154,7 @@ jobs:
       - name: Generate Prisma client for ${{ matrix.service }}
         working-directory: ./services/${{ matrix.service }}
         run: |
-          npx prisma generate --schema=./prisma/schema.prisma
+          npx prisma generate --schema=./src/prisma/schema.prisma
 
       - name: Run E2E test for ${{ matrix.service }}
         working-directory: ./services/${{ matrix.service }}
