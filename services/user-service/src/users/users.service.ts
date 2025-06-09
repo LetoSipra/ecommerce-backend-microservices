@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from 'generated/prisma';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { USER_SELECT } from 'src/prisma/selectors/selectors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
-import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { User } from 'generated/prisma';
 
 @Injectable()
 export class UsersService {
