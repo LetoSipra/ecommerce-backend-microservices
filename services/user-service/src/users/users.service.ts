@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { USER_SELECT } from 'src/prisma/selectors/selectors';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { WINSTON_MODULE_PROVIDER, WinstonLogger } from 'nest-winston';
+import { PrismaClientKnownRequestError } from 'generated/prisma/runtime/library';
 
 @Injectable()
 export class UsersService {
@@ -63,9 +64,11 @@ export class UsersService {
 
       return { user, token };
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === 'P2002') {
-        throw new ConflictException('Email already exists');
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException('Email already exists');
+        }
+        throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Creating new user failed');
     }
@@ -147,13 +150,14 @@ export class UsersService {
 
       return { user: updatedUser, token: newToken };
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`User with ID ${id} not found`);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === 'P2002') {
-        throw new ConflictException('Email already exists');
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        if (error.code === 'P2002') {
+          throw new ConflictException('Email already exists');
+        }
+        throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Failed to update user');
     }
@@ -183,9 +187,11 @@ export class UsersService {
 
       return deletedUser;
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      if (error.code === 'P2025') {
-        throw new NotFoundException(`User with ID ${id} not found`);
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Failed to delete user');
     }
