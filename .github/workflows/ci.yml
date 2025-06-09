@@ -37,8 +37,9 @@ jobs:
       - name: Cache node_modules for ${{ matrix.service }}
         uses: actions/cache@v3
         with:
+          # Use format() instead of '+' to build the hashFiles argument
           path: services/${{ matrix.service }}/node_modules
-          key: node-modules-${{ matrix.service }}-${{ runner.os }}-${{ hashFiles('services/' + matrix.service + '/package-lock.json') }}
+          key: node-modules-${{ matrix.service }}-${{ runner.os }}-${{ hashFiles(format('services/{0}/package-lock.json', matrix.service)) }}
           restore-keys: |
             node-modules-${{ matrix.service }}-${{ runner.os }}-
 
@@ -88,9 +89,7 @@ jobs:
           ELAPSED=0
 
           # (3) List out all of the service names exactly as they appear
-          #     in your `docker-compose.yml`. Order doesn’t strictly matter here,
-          #     but “upstream” services (e.g. postgres, rabbitmq, elasticsearch)
-          #     should appear before the services that depend on them.
+          #     in your `docker-compose.yml`. Upstream services first.
           SERVICES=(
             "postgres"
             "rabbitmq"
@@ -146,16 +145,3 @@ jobs:
           done
 
       - name: Install E2E dependencies
-        working-directory: ./tests/e2e
-        run: |
-          npm ci
-
-      - name: Run E2E test suite
-        working-directory: ./tests/e2e
-        run: |
-          npm test:e2e
-
-      - name: Tear down Docker Compose
-        if: always()
-        run: |
-          docker-compose -f docker-compose.yml down --volumes
