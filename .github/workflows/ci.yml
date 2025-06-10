@@ -127,7 +127,8 @@ jobs:
           cat <<EOF > kibana/.env
           ELASTICSEARCH_HOST=http://elasticsearch:9200
           ELASTICSEARCH_USERNAME=kibana_system
-          ELASTICSEARCH_PASSWORD=${{ secrets.KIBANA_PASS }}
+          ELASTICSEARCH_PASSWORD=${{ secrets.KIBANA_PASSWORD }}
+          ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}
           EOF
 
       - name: Set up Docker Compose
@@ -135,9 +136,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
 
-      - name: Build and start all services
+      - name: Start Elasticsearch
         run: |
-          docker-compose -f docker-compose.yml up -d --build
+          docker-compose -f docker-compose.yml up elasticsearch -d --build
 
       - name: Wait for Elasticsearch healthy
         run: |
@@ -195,6 +196,10 @@ jobs:
             echo "Elasticsearch container not found. Skipping kibana_system password setup."
             exit 1
           fi
+
+      - name: Build and start all services
+        run: |
+          docker-compose -f docker-compose.yml up -d --build
 
       - name: Wait for services to be healthy
         run: |
