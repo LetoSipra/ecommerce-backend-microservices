@@ -17,10 +17,10 @@ services:
       - ecommerce-net
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost/nginx-health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   user-service:
     build: ./services/user-service
@@ -38,10 +38,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
       start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   product-catalog-service:
     build: ./services/product-catalog-service
@@ -59,10 +59,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3002/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   shopping-cart-service:
     build: ./services/shopping-cart-service
@@ -80,10 +80,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3003/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   order-service:
     build: ./services/order-service
@@ -105,10 +105,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3004/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   notification-service:
     build: ./services/notification-service
@@ -128,10 +128,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3005/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   payment-service:
     build: ./services/payment-service
@@ -149,10 +149,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3006/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   postgres:
     image: postgres:14
@@ -167,10 +167,10 @@ services:
       - ecommerce-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -185,10 +185,10 @@ services:
       - ecommerce-net
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3
@@ -211,10 +211,10 @@ services:
           "CMD-SHELL",
           "curl -f -u elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health?wait_for_status=yellow || exit 1",
         ]
+      start_period: 30s
       interval: 15s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 10
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.5.3
@@ -237,10 +237,10 @@ services:
           "CMD-SHELL",
           "curl -f -u elastic:$$ELASTIC_PASSWORD http://localhost:5601/api/status || exit 1",
         ]
+      start_period: 30s
       interval: 15s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 10
 
 networks:
   ecommerce-net:

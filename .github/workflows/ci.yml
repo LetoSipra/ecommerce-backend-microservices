@@ -186,6 +186,20 @@ jobs:
             if [ $ELAPSED -ge $TIMEOUT ]; then
               echo "❌ Timeout waiting for services to become healthy."
               docker-compose -f docker-compose.yml ps
+
+              echo "📜 Dumping logs for unhealthy containers:"
+              for SVC in "${SERVICES[@]}"; do
+                CID=$(docker-compose -f docker-compose.yml ps -q "$SVC")
+                if [ -n "$CID" ]; then
+                  STATUS=$(docker inspect -f '{{ .State.Health.Status }}' "$CID" 2>/dev/null || echo "no-healthcheck")
+                  if [ "$STATUS" != "healthy" ]; then
+                    echo "🔻 Logs for $SVC:"
+                    docker logs "$CID" || echo "⚠️ Failed to fetch logs for $SVC"
+                    echo ""
+                  fi
+                fi
+              done
+
               exit 1
             fi
 
