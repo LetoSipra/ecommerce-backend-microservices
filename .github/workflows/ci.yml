@@ -63,7 +63,7 @@ jobs:
         run: |
           cat <<EOF > services/user-service/.env
           USER_SERVICE_DATABASE_URL=${{ secrets.USER_SERVICE_DATABASE_URL }}
-          AUTH_SECRET=${{ secrets.USER_SERVICE_AUTH_SECRET }}
+          AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           PORT=3001
           ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
           EOF
