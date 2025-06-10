@@ -54,7 +54,7 @@ jobs:
 
   build-docker-compose:
     name: Create .env files from secrets
-      run: |
+    run: |
         cat <<EOF > services/user-service/.env
         USER_SERVICE_DATABASE_URL=${{ secrets.USER_SERVICE_DATABASE_URL }}
         AUTH_SECRET=${{ secrets.USER_SERVICE_AUTH_SECRET }}
