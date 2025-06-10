@@ -275,9 +275,9 @@ jobs:
           done
       - name: Run tests inside services
         run: |
-          docker-compose -f docker-compose.yml exec -T user-service npm run test
-          docker-compose -f docker-compose.yml exec -T product-catalog-service npm run test
-          docker-compose -f docker-compose.yml exec -T shopping-cart-service npm run test
-          docker-compose -f docker-compose.yml exec -T order-service npm run test
-          docker-compose -f docker-compose.yml exec -T payment-service npm run test
-          docker-compose -f docker-compose.yml exec -T notification-service npm run test
+          docker-compose -f docker-compose.yml exec -T user-service npm run test:e2e
+          docker-compose -f docker-compose.yml exec -T product-catalog-service npm run test:e2e
+          docker-compose -f docker-compose.yml exec -T shopping-cart-service npm run test:e2e
+          docker-compose -f docker-compose.yml exec -T order-service npm run test:e2e
+          docker-compose -f docker-compose.yml exec -T payment-service npm run test:e2e
+          docker-compose -f docker-compose.yml exec -T notification-service npm run test:e2e
