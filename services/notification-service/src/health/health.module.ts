@@ -5,9 +5,11 @@ import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from '../prisma/prisma.module';
 import { HealthController } from './health.controller';
 import { TerminusLogger } from './terminus-logger.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     TerminusModule.forRoot({
       errorLogStyle: 'pretty',
       logger: TerminusLogger,

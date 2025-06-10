@@ -53,6 +53,71 @@ jobs:
   #         npm run lint
 
   build-docker-compose:
+    name: Create .env files from secrets
+      run: |
+        cat <<EOF > services/user-service/.env
+        USER_SERVICE_DATABASE_URL=${{ secrets.USER_SERVICE_DATABASE_URL }}
+        AUTH_SECRET=${{ secrets.USER_SERVICE_AUTH_SECRET }}
+        PORT=3001
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > services/product-catalog-service/.env
+        PRODUCT_SERVICE_DATABASE_URL=${{ secrets.PRODUCT_SERVICE_DATABASE_URL }}
+        USER_SERVICE_URL="http://user-service:3001"
+        PORT=3002
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > services/shopping-cart-service/.env
+        DATABASE_URL=${{ secrets.SHOPPING_CART_DATABASE_URL }}
+        USER_SERVICE_URL="http://user-service:3001"
+        PORT=3003
+        PRODUCT_SERVICE_URL="http://product-catalog-service:3002"
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > services/payment-service/.env
+        PAYMENT_SERVICE_DATABASE_URL=${{ secrets.PAYMENT_SERVICE_DATABASE_URL }}
+        USER_SERVICE_URL="http://user-service:3001"
+        STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+        PORT=3006
+        ORDER_SERVICE_URL="http://order-service:3004"
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > services/order-service/.env
+        ORDER_SERVICE_DATABASE_URL=${{ secrets.ORDER_SERVICE_DATABASE_URL }}
+        RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
+        USER_SERVICE_URL="http://user-service:3001"
+        PRODUCT_SERVICE_URL="http://product-catalog-service:3002"
+        STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+        PORT=3004
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > services/notification-service/.env
+        NOTIFICATION_SERVICE_DATABASE_URL=${{ secrets.NOTIFICATION_SERVICE_DATABASE_URL }}
+        RABBITMQ_URL=${{ secrets.RABBITMQ_URL }}
+        PORT=3005
+        ELASTICSEARCH_URL=${{ secrets.ELASTICSEARCH_URL }}
+        EOF
+
+        cat <<EOF > elasticsearch/.env
+        ELASTIC_PASSWORD=${{ secrets.ELASTIC_PASSWORD }}
+        EOF
+
+        cat <<EOF > postgres/.env
+        POSTGRES_USER=postgres
+        POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_DB=ecommerce_user
+        EOF
+
+        cat <<EOF > rabbitmq/.env
+        RABBITMQ_DEFAULT_USER=rmqadmin
+        RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}
+        EOF
+
     name: Build Docker Compose & Wait for Health
     runs-on: ubuntu-latest
     defaults:

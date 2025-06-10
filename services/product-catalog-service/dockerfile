@@ -3,16 +3,12 @@ FROM node:20
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-
 RUN npm install
-
-# Copy Prisma schema and env before generating client
 COPY src/prisma ./src/prisma
+COPY .env .env
 
-# Generate Prisma client
 RUN npx prisma generate --schema=src/prisma/schema.prisma
 
-# Copy the rest of the application files
 COPY . .
 
 RUN npm run build

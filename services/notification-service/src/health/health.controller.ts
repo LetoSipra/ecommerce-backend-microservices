@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Transport } from '@nestjs/microservices';
 import {
   HealthCheckService,
@@ -21,12 +22,19 @@ export class HealthController {
     private memory: MemoryHealthIndicator,
     private disk: DiskHealthIndicator,
     private microservice: MicroserviceHealthIndicator,
+    private configService: ConfigService,
     private httpIndicator: HttpHealthIndicator,
   ) {}
 
   @Get()
   @HealthCheck()
   async check(): Promise<HealthCheckResult> {
+    const rabbitmqUrl =
+      this.configService.get<string>('RABBITMQ_URL') ||
+      'amqp://guest:guest@localhost:5672';
+    const elasticUrl =
+      this.configService.get<string>('ELASTICSEARCH_URL') ||
+      'http://localhost:9200';
     return this.health.check([
       () => this.prisma.pingCheck('database', this.prismaService),
       () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
@@ -39,17 +47,15 @@ export class HealthController {
         this.microservice.pingCheck('rabbitmq', {
           transport: Transport.RMQ,
           options: {
-            urls: ['amqp://guest:guest@rabbitmq:5672'],
+            urls: [rabbitmqUrl],
             queue: 'notifications_queue',
             queueOptions: { durable: true },
           },
         }),
       () =>
-        this.httpIndicator.pingCheck(
-          'elasticsearch',
-          process.env.ELASTICSEARCH_URL || 'http://localhost:9200',
-          { timeout: 3000 },
-        ),
+        this.httpIndicator.pingCheck('elasticsearch', elasticUrl, {
+          timeout: 3000,
+        }),
     ]);
   }
 }
