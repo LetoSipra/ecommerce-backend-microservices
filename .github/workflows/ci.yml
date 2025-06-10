@@ -138,7 +138,7 @@ jobs:
 
       - name: Start Elasticsearch
         run: |
-          docker-compose -f docker-compose.yml up elasticsearch -d --build
+          docker-compose -f docker-compose.yml up -d --build elasticsearch
 
       - name: Wait for Elasticsearch healthy
         run: |
