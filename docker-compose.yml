@@ -223,12 +223,8 @@ services:
       - elasticsearch
     ports:
       - "5601:5601"
-    environment:
-      ELASTICSEARCH_HOSTS: "http://elasticsearch:9200"
-      ELASTICSEARCH_USERNAME: "kibana_system"
-      ELASTICSEARCH_PASSWORD: "3HbUdla7uS=_uuRs0Nar"
     env_file:
-      - ./elasticsearch/.env
+      - ./kibana/.env
     networks:
       - ecommerce-net
     healthcheck:

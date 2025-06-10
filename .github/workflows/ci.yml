@@ -76,7 +76,7 @@ jobs:
           EOF
 
           cat <<EOF > services/shopping-cart-service/.env
-          DATABASE_URL=${{ secrets.SHOPPING_CART_DATABASE_URL }}
+          SHOPPING_CART_DATABASE_URL=${{ secrets.SHOPPING_CART_DATABASE_URL }}
           USER_SERVICE_URL="http://user-service:3001"
           PORT=3003
           PRODUCT_SERVICE_URL="http://product-catalog-service:3002"
@@ -124,6 +124,12 @@ jobs:
           RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}
           EOF
 
+          cat <<EOF > kibana/.env
+          ELASTICSEARCH_HOST=http://elasticsearch:9200
+          ELASTICSEARCH_USERNAME=kibana_system
+          ELASTICSEARCH_PASSWORD=${{ secrets.KIBANA_PASS }}
+          EOF
+
       - name: Set up Docker Compose
         run: |
           sudo apt-get update
@@ -132,6 +138,63 @@ jobs:
       - name: Build and start all services
         run: |
           docker-compose -f docker-compose.yml up -d --build
+
+      - name: Wait for Elasticsearch healthy
+        run: |
+          echo "Waiting for Elasticsearch to be healthy..."
+
+          TIMEOUT=300  # 5 minutes max wait
+          INTERVAL=5
+          ELAPSED=0
+
+          while true; do
+            ELASTIC_CID=$(docker-compose -f docker-compose.yml ps -q elasticsearch)
+            if [ -z "$ELASTIC_CID" ]; then
+              echo "Elasticsearch container not found."
+              exit 1
+            fi
+
+            STATUS=$(docker inspect -f '{{ .State.Health.Status }}' "$ELASTIC_CID" 2>/dev/null || echo "unhealthy")
+            if [ "$STATUS" == "healthy" ]; then
+              echo "Elasticsearch is healthy!"
+              break
+            else
+              echo "Elasticsearch status: $STATUS"
+            fi
+
+            ELAPSED=$((ELAPSED + INTERVAL))
+            if [ $ELAPSED -ge $TIMEOUT ]; then
+              echo "Timeout waiting for Elasticsearch to become healthy."
+              docker logs "$ELASTIC_CID"
+              exit 1
+            fi
+
+            sleep $INTERVAL
+          done
+
+      - name: Set kibana_system password if Elasticsearch is healthy
+        run: |
+          # Get Elasticsearch container ID
+          ELASTIC_CID=$(docker-compose -f docker-compose.yml ps -q elasticsearch)
+
+          # Check if container exists and is healthy
+          if [ -n "$ELASTIC_CID" ]; then
+            STATUS=$(docker inspect -f '{{ .State.Health.Status }}' "$ELASTIC_CID" 2>/dev/null || echo "unhealthy")
+
+            if [ "$STATUS" == "healthy" ]; then
+              echo "Elasticsearch is healthy, setting kibana_system password..."
+              curl -X POST "http://localhost:9200/_security/user/kibana_system/_password" \
+                -H "Content-Type: application/json" \
+                -u elastic:${{ secrets.ELASTIC_PASSWORD }} \
+                -d '{"password":"'"${{ secrets.KIBANA_PASSWORD }}"'"}'
+            else
+              echo "Elasticsearch container is not healthy (status: $STATUS). Skipping kibana_system password setup."
+              exit 1
+            fi
+          else
+            echo "Elasticsearch container not found. Skipping kibana_system password setup."
+            exit 1
+          fi
 
       - name: Wait for services to be healthy
         run: |

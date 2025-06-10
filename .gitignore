@@ -3,3 +3,4 @@
 generated/
 .env
 kibana/
+elastic_password.txt
