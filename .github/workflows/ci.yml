@@ -62,7 +62,6 @@ jobs:
       - name: Create .env files from secrets
         run: |
           cat <<EOF > services/user-service/.env
-          echo "USER_SERVICE_DATABASE_URL length: ${#{{ secrets.USER_SERVICE_DATABASE_URL }}}"
           USER_SERVICE_DATABASE_URL=${{ secrets.USER_SERVICE_DATABASE_URL }}
           AUTH_SECRET=${{ secrets.USER_SERVICE_AUTH_SECRET }}
           PORT=3001
